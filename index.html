@@ -170,83 +170,85 @@
     <div id="tab-spec" class="tab-panel hidden">
       <div class="spec-cols">
 
-        <!-- 목표 스펙 열 -->
-        <div class="spec-col">
-          <div class="char-section">
-            <img src="img/character_goal.png" class="char-avatar" alt="목표 합격자" />
-            <p class="char-label">목표 합격자</p>
-          </div>
-          <div class="spec-col-items">
-            <div class="spec-row-item">
-              <span class="spec-row-label">학점</span>
-              <input type="number" id="gpaGoal" step="0.01" min="0" max="4.5" placeholder="4.5" />
-            </div>
-            <div class="spec-row-item">
-              <span class="spec-row-label">영어</span>
-              <input type="text" id="englishGoal" placeholder="OPIc IM2" />
-            </div>
-            <div class="spec-row-item">
-              <span class="spec-row-label">자격증</span>
-              <input type="text" id="certGoal" placeholder="컴활 1급, 한국사 1급, ADsP" />
-              <span class="cert-count-badge" id="certGoalCount">0개</span>
-            </div>
-            <div class="spec-row-item">
-              <span class="spec-row-label">인턴</span>
-              <input type="text" id="internGoal" placeholder="1회" />
-            </div>
-            <div class="spec-row-item">
-              <span class="spec-row-label">기타</span>
-              <input type="text" id="extraGoal" placeholder="대외활동, 봉사 등" />
-            </div>
-          </div>
-          <button id="saveGoal" class="btn-primary spec-save-btn">목표 저장</button>
+        <!-- 캐릭터 행 -->
+        <div class="char-section">
+          <img src="img/character_goal.png" class="char-avatar" alt="목표 합격자" />
+          <p class="char-label">목표 합격자</p>
+        </div>
+        <div class="char-section">
+          <img src="img/character_me.png" class="char-avatar" alt="나" />
+          <p class="char-label">나</p>
         </div>
 
-        <!-- 내 현재 스펙 열 -->
-        <div class="spec-col">
-          <div class="char-section">
-            <img src="img/character_me.png" class="char-avatar" alt="나" />
-            <p class="char-label">나</p>
-          </div>
-          <div class="spec-col-items">
-            <div class="spec-row-item">
-              <span class="spec-row-label">학점</span>
-              <div class="spec-row-right">
-                <input type="number" id="gpaCurrent" step="0.01" min="0" max="4.5" placeholder="0.0" />
-                <div class="spec-progress-inline">
-                  <div class="progress-track"><div class="progress-fill" id="gpaFill"></div></div>
-                  <span class="progress-pct" id="gpaPct">—</span>
-                </div>
-              </div>
-            </div>
-            <div class="spec-row-item">
-              <span class="spec-row-label">영어</span>
-              <input type="text" id="englishCurrent" placeholder="OPIc IL" />
-            </div>
-            <div class="spec-row-item">
-              <span class="spec-row-label">자격증</span>
-              <div class="spec-row-right">
-                <div class="cert-input-row">
-                  <input type="text" id="certCurrent" placeholder="컴활 1급, ADsP" />
-                  <span class="cert-count-badge" id="certCurrCount">0개</span>
-                </div>
-                <div class="spec-progress-inline">
-                  <div class="progress-track"><div class="progress-fill" id="certFill"></div></div>
-                  <span class="progress-pct" id="certPct">—</span>
-                </div>
-              </div>
-            </div>
-            <div class="spec-row-item">
-              <span class="spec-row-label">인턴</span>
-              <input type="text" id="internCurrent" placeholder="0회" />
-            </div>
-            <div class="spec-row-item">
-              <span class="spec-row-label">기타</span>
-              <input type="text" id="extraCurrent" placeholder="보유 스펙 등" />
-            </div>
-          </div>
-          <button id="saveCurrent" class="btn-primary spec-save-btn">현재 저장</button>
+        <!-- 학점 행 -->
+        <div class="spec-row-item">
+          <span class="spec-row-label">학점</span>
+          <input type="number" id="gpaGoal" step="0.01" min="0" max="4.5" placeholder="4.5" />
         </div>
+        <div class="spec-row-item">
+          <span class="spec-row-label">학점</span>
+          <div class="spec-row-right">
+            <input type="number" id="gpaCurrent" step="0.01" min="0" max="4.5" placeholder="0.0" />
+            <div class="spec-progress-inline">
+              <div class="progress-track"><div class="progress-fill" id="gpaFill"></div></div>
+              <span class="progress-pct" id="gpaPct">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 영어 행 -->
+        <div class="spec-row-item">
+          <span class="spec-row-label">영어</span>
+          <input type="text" id="englishGoal" placeholder="OPIc IM2" />
+        </div>
+        <div class="spec-row-item">
+          <span class="spec-row-label">영어</span>
+          <input type="text" id="englishCurrent" placeholder="OPIc IL" />
+        </div>
+
+        <!-- 자격증 행 -->
+        <div class="spec-row-item">
+          <span class="spec-row-label">자격증</span>
+          <input type="text" id="certGoal" placeholder="컴활 1급, 한국사 1급, ADsP" />
+          <span class="cert-count-badge" id="certGoalCount">0개</span>
+        </div>
+        <div class="spec-row-item">
+          <span class="spec-row-label">자격증</span>
+          <div class="spec-row-right">
+            <div class="cert-input-row">
+              <input type="text" id="certCurrent" placeholder="컴활 1급, ADsP" />
+              <span class="cert-count-badge" id="certCurrCount">0개</span>
+            </div>
+            <div class="spec-progress-inline">
+              <div class="progress-track"><div class="progress-fill" id="certFill"></div></div>
+              <span class="progress-pct" id="certPct">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 인턴 행 -->
+        <div class="spec-row-item">
+          <span class="spec-row-label">인턴</span>
+          <input type="text" id="internGoal" placeholder="1회" />
+        </div>
+        <div class="spec-row-item">
+          <span class="spec-row-label">인턴</span>
+          <input type="text" id="internCurrent" placeholder="0회" />
+        </div>
+
+        <!-- 기타 행 -->
+        <div class="spec-row-item">
+          <span class="spec-row-label">기타</span>
+          <input type="text" id="extraGoal" placeholder="대외활동, 봉사 등" />
+        </div>
+        <div class="spec-row-item">
+          <span class="spec-row-label">기타</span>
+          <input type="text" id="extraCurrent" placeholder="보유 스펙 등" />
+        </div>
+
+        <!-- 저장 버튼 행 -->
+        <button id="saveGoal" class="btn-primary spec-save-btn">목표 저장</button>
+        <button id="saveCurrent" class="btn-primary spec-save-btn">현재 저장</button>
 
       </div>
     </div>

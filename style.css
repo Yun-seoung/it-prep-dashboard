@@ -688,7 +688,6 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 20px;
   padding-bottom: 18px;
   border-bottom: 1px solid #e9e9e7;
 }
@@ -737,31 +736,11 @@ body {
 .cert-input-row input:focus { border-bottom-color: #1a1a1a; }
 .cert-input-row input::placeholder { color: #c8c8c8; }
 
-/* ===== Spec Tracker (2-column layout) ===== */
+/* ===== Spec Tracker (shared-row flat grid) ===== */
 .spec-cols {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 40px;
-}
-
-.spec-col {
-  display: flex;
-  flex-direction: column;
-}
-
-.spec-col-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e9e9e7;
-}
-
-.spec-col-items {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
+  column-gap: 40px;
 }
 
 .spec-row-item {
@@ -852,12 +831,12 @@ body {
 }
 
 .spec-save-btn {
-  align-self: flex-end;
-  margin-top: 20px;
+  justify-self: end;
+  margin-top: 16px;
 }
 
 @media (max-width: 640px) {
-  .spec-cols { grid-template-columns: 1fr; gap: 28px; }
+  .spec-cols { grid-template-columns: 1fr; column-gap: 0; }
 }
 
 /* ===== Memo ===== */
