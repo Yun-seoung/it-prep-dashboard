@@ -165,6 +165,16 @@ async function dbSaveSpec(data) {
   await setDoc(doc(db, 'spec', 'tracker'), data, { merge: true });
 }
 
+// ===== Firestore: Gauge =====
+async function dbLoadGaugeTarget() {
+  const snap = await getDoc(doc(db, 'gauge', 'cert'));
+  return snap.exists() ? (snap.data().targetCount ?? 8) : 8;
+}
+
+async function dbSaveGaugeTarget(count) {
+  await setDoc(doc(db, 'gauge', 'cert'), { targetCount: count });
+}
+
 // ===== Default Data Seed (only when collections are empty) =====
 async function seedDefaultData() {
   const [examSnap, checkSnap] = await Promise.all([
@@ -281,6 +291,43 @@ function renderCerts() {
       `;
     });
   }).join('');
+}
+
+// ===== Pixel Gauges =====
+function getAcquiredCertCount() {
+  return CERTS.flatMap(g => g.items).filter(cert =>
+    checklist.some(c => c.done && c.text.toLowerCase().includes(cert.keyword))
+  ).length;
+}
+
+function renderPixelBar(barId, filledClass, pct) {
+  const bar = document.getElementById(barId);
+  if (!bar) return;
+  const filled = Math.round((Math.min(pct, 100) / 100) * 8);
+  bar.innerHTML = Array.from({ length: 8 }, (_, i) =>
+    `<span class="pixel-block ${i < filled ? filledClass : 'empty'}"></span>`
+  ).join('');
+}
+
+function renderGauges() {
+  const targetEl = document.getElementById('certGaugeTarget');
+  if (!targetEl) return;
+
+  const certTarget   = Math.max(1, parseInt(targetEl.value) || 8);
+  const certAcquired = getAcquiredCertCount();
+  const certPct      = Math.min(Math.round((certAcquired / certTarget) * 100), 100);
+
+  document.getElementById('certGaugePct').textContent   = `${certPct}%`;
+  document.getElementById('certGaugeCount').textContent = `${certAcquired} / ${certTarget}개`;
+  renderPixelBar('certGaugeBar', 'filled-cert', certPct);
+
+  const total    = checklist.length;
+  const done     = checklist.filter(x => x.done).length;
+  const checkPct = total > 0 ? Math.min(Math.round((done / total) * 100), 100) : 0;
+
+  document.getElementById('checkGaugePct').textContent   = `${checkPct}%`;
+  document.getElementById('checkGaugeCount').textContent = `${done} / ${total}개`;
+  renderPixelBar('checkGaugeBar', 'filled-check', checkPct);
 }
 
 // ===== Spec Tracker =====
@@ -433,6 +480,7 @@ function renderChecklist() {
   });
 
   renderCerts();
+  renderGauges();
 }
 
 // ===== Checklist Add =====
@@ -450,6 +498,17 @@ async function addCheckItem() {
 document.getElementById('addCheckBtn').addEventListener('click', addCheckItem);
 document.getElementById('newCheckText').addEventListener('keydown', e => {
   if (e.key === 'Enter') addCheckItem();
+});
+
+// ===== Gauge Target Input =====
+let gaugeTimer = null;
+document.getElementById('certGaugeTarget').addEventListener('input', () => {
+  renderGauges();
+  clearTimeout(gaugeTimer);
+  gaugeTimer = setTimeout(async () => {
+    const val = parseInt(document.getElementById('certGaugeTarget').value);
+    if (val > 0) await dbSaveGaugeTarget(val);
+  }, 600);
 });
 
 // ===== Tab Switching =====
@@ -483,12 +542,20 @@ async function init() {
   try {
     await seedDefaultData();
 
-    [ddays, checklist] = await Promise.all([dbLoadDdays(), dbLoadChecklist()]);
+    const [ddaysData, checklistData, memoText, gaugeTarget] = await Promise.all([
+      dbLoadDdays(),
+      dbLoadChecklist(),
+      dbLoadMemo(),
+      dbLoadGaugeTarget(),
+    ]);
+
+    ddays     = ddaysData;
+    checklist = checklistData;
+    memoArea.value = memoText;
+    document.getElementById('certGaugeTarget').value = gaugeTarget;
 
     ddays.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
     checklist.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
-
-    memoArea.value = await dbLoadMemo();
 
     renderDdays();
     renderChecklist();

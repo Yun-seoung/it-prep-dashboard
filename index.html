@@ -29,6 +29,35 @@
     <!-- ===== 홈 탭 ===== -->
     <div id="tab-home" class="tab-panel">
 
+      <div class="gauge-section">
+        <div class="gauge-card">
+          <p class="gauge-title">자격증 준비도</p>
+          <div class="gauge-row">
+            <span class="gauge-pct" id="certGaugePct">0%</span>
+            <div class="pixel-gauge-outer">
+              <div class="pixel-gauge-bar" id="certGaugeBar"></div>
+            </div>
+            <span class="gauge-count" id="certGaugeCount">0 / 8개</span>
+          </div>
+          <div class="gauge-target-row">
+            <span class="gauge-target-label">목표</span>
+            <input type="number" id="certGaugeTarget" class="gauge-target-input" min="1" max="30" value="8" />
+            <span class="gauge-target-label">개</span>
+          </div>
+        </div>
+
+        <div class="gauge-card">
+          <p class="gauge-title">체크리스트 달성도</p>
+          <div class="gauge-row">
+            <span class="gauge-pct" id="checkGaugePct">0%</span>
+            <div class="pixel-gauge-outer">
+              <div class="pixel-gauge-bar" id="checkGaugeBar"></div>
+            </div>
+            <span class="gauge-count" id="checkGaugeCount">0 / 0개</span>
+          </div>
+        </div>
+      </div>
+
       <div class="main-grid">
 
         <section class="card">
