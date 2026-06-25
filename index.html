@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>공기업 IT 직무 준비 대시보드</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <h1>공기업 IT 직무 준비 대시보드</h1>
+      <p id="todayDate" class="today-label"></p>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <div class="main-grid">
+
+      <!-- D-Day -->
+      <section class="card">
+        <div class="section-head">
+          <h2>시험 / 자격증 D-Day</h2>
+          <button id="openDdayForm" class="btn-add">+ 추가</button>
+        </div>
+
+        <div id="ddayList"></div>
+
+        <div id="ddayForm" class="dday-form-wrap hidden">
+          <input type="text" id="ddayLabel" placeholder="시험명 (예: 정보처리기사)" />
+          <input type="date" id="ddayDate" />
+          <div class="form-btns">
+            <button id="saveDday" class="btn-primary">저장</button>
+            <button id="cancelDday" class="btn-ghost">취소</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Checklist -->
+      <section class="card">
+        <div class="section-head">
+          <h2>준비 체크리스트</h2>
+          <span id="checkProgress" class="progress-badge">0 / 0</span>
+        </div>
+
+        <ul id="checklistEl"></ul>
+
+        <div class="add-row">
+          <input type="text" id="newCheckText" placeholder="새 항목 추가..." />
+          <button id="addCheckBtn" class="btn-primary">추가</button>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Memo -->
+    <section class="card memo-card">
+      <div class="section-head">
+        <h2>오늘 할 일</h2>
+        <span id="autoSaveLabel" class="auto-save-label"></span>
+      </div>
+      <textarea id="memoArea" placeholder="오늘 공부할 내용, 할 일 등을 자유롭게 적어보세요..."></textarea>
+    </section>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
