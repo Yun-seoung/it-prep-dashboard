@@ -885,6 +885,15 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.timer-cs {
+  font-size: 0.62em;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -1px;
+  vertical-align: baseline;
+  font-variant-numeric: tabular-nums;
+}
+
 .timer-btns {
   display: flex;
   gap: 10px;

@@ -78,6 +78,7 @@ let certStatus = {}; // { [certName]: { acquired: boolean, date: string|null } }
 // Timer state
 let timerInterval     = null;
 let timerTotalSeconds = 0;
+let timerCentiseconds = 0;
 let timerDate         = '';
 
 // Calendar state
@@ -462,6 +463,7 @@ async function loadSpec() {
 // ===== Study Timer =====
 function startTimer() {
   if (timerInterval) return;
+  timerCentiseconds = 0;
   document.getElementById('timerStartBtn').classList.add('hidden');
   document.getElementById('timerStopBtn').classList.remove('hidden');
 
@@ -471,10 +473,16 @@ function startTimer() {
       dbSaveStudyTime(timerDate, timerTotalSeconds);
       timerDate = now;
       timerTotalSeconds = 0;
+      timerCentiseconds = 0;
     }
-    timerTotalSeconds++;
-    document.getElementById('timerDisplay').textContent = formatTimer(timerTotalSeconds);
-  }, 1000);
+    timerCentiseconds++;
+    if (timerCentiseconds >= 100) {
+      timerCentiseconds = 0;
+      timerTotalSeconds++;
+    }
+    document.getElementById('timerMainDisplay').textContent = formatTimer(timerTotalSeconds);
+    document.getElementById('timerCsDisplay').textContent   = `.${String(timerCentiseconds).padStart(2,'0')}`;
+  }, 10);
 }
 
 async function stopTimer() {
@@ -780,7 +788,7 @@ async function init() {
     document.getElementById('certGaugeTarget').value = gaugeTarget;
 
     timerTotalSeconds = todaySeconds;
-    document.getElementById('timerDisplay').textContent = formatTimer(timerTotalSeconds);
+    document.getElementById('timerMainDisplay').textContent = formatTimer(timerTotalSeconds);
 
     ddays.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
     checklist.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
