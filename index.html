@@ -170,8 +170,12 @@
     <div id="tab-spec" class="tab-panel hidden">
       <div class="spec-cols">
 
+        <!-- 목표 스펙 열 -->
         <div class="spec-col">
-          <h3 class="spec-col-title">목표 스펙</h3>
+          <div class="char-section">
+            <div class="char-avatar type-goal"></div>
+            <p class="char-label">목표 합격자</p>
+          </div>
           <div class="spec-col-items">
             <div class="spec-row-item">
               <span class="spec-row-label">학점</span>
@@ -183,7 +187,8 @@
             </div>
             <div class="spec-row-item">
               <span class="spec-row-label">자격증</span>
-              <input type="number" id="certGoal" min="0" placeholder="5" />
+              <input type="text" id="certGoal" placeholder="컴활 1급, 한국사 1급, ADsP" />
+              <span class="cert-count-badge" id="certGoalCount">0개</span>
             </div>
             <div class="spec-row-item">
               <span class="spec-row-label">인턴</span>
@@ -197,8 +202,12 @@
           <button id="saveGoal" class="btn-primary spec-save-btn">목표 저장</button>
         </div>
 
+        <!-- 내 현재 스펙 열 -->
         <div class="spec-col">
-          <h3 class="spec-col-title">내 현재 스펙</h3>
+          <div class="char-section">
+            <div class="char-avatar type-current"></div>
+            <p class="char-label">나</p>
+          </div>
           <div class="spec-col-items">
             <div class="spec-row-item">
               <span class="spec-row-label">학점</span>
@@ -217,7 +226,10 @@
             <div class="spec-row-item">
               <span class="spec-row-label">자격증</span>
               <div class="spec-row-right">
-                <input type="number" id="certCurrent" min="0" placeholder="0" />
+                <div class="cert-input-row">
+                  <input type="text" id="certCurrent" placeholder="컴활 1급, ADsP" />
+                  <span class="cert-count-badge" id="certCurrCount">0개</span>
+                </div>
                 <div class="spec-progress-inline">
                   <div class="progress-track"><div class="progress-fill" id="certFill"></div></div>
                   <span class="progress-pct" id="certPct">—</span>

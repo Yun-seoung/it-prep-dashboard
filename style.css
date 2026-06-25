@@ -683,6 +683,76 @@ body {
   .cert-item { flex-direction: column; align-items: flex-start; gap: 6px; }
 }
 
+/* ===== Spec Character ===== */
+.char-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e9e9e7;
+}
+
+.char-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 14px;
+  overflow: hidden;
+  background-image: url('img/characters.png');
+  background-repeat: no-repeat;
+  background-color: #62b9d0;
+  background-size: auto 220px;
+  flex-shrink: 0;
+}
+
+/* 돋보기 여자 — 이미지 왼쪽 캐릭터 ("나") */
+.char-avatar.type-current {
+  background-position: 2px -28px;
+}
+
+/* 안경 남자 — 이미지 오른쪽 캐릭터 ("목표 합격자") */
+.char-avatar.type-goal {
+  background-position: -162px -28px;
+}
+
+.char-label {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3a3a3a;
+}
+
+/* ===== Cert Count Badge ===== */
+.cert-count-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9b9b9b;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cert-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cert-input-row input {
+  flex: 1;
+  border: none;
+  border-bottom: 1px solid #e9e9e7;
+  padding: 4px 0;
+  font-size: 14px;
+  color: #1a1a1a;
+  font-family: inherit;
+  background: transparent;
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 0;
+}
+.cert-input-row input:focus { border-bottom-color: #1a1a1a; }
+.cert-input-row input::placeholder { color: #c8c8c8; }
+
 /* ===== Spec Tracker (2-column layout) ===== */
 .spec-cols {
   display: grid;

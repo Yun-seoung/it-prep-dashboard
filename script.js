@@ -365,6 +365,11 @@ function renderGauges() {
 }
 
 // ===== Spec Tracker =====
+function countCerts(text) {
+  if (!text || !text.trim()) return 0;
+  return text.split(',').filter(s => s.trim().length > 0).length;
+}
+
 function updateSpecProgress() {
   const gpaGoal = parseFloat(document.getElementById('gpaGoal').value);
   const gpaCurr = parseFloat(document.getElementById('gpaCurrent').value);
@@ -378,10 +383,14 @@ function updateSpecProgress() {
     document.getElementById('gpaPct').textContent  = '—';
   }
 
-  const certGoal = parseInt(document.getElementById('certGoal').value);
-  const certCurr = parseInt(document.getElementById('certCurrent').value);
-  if (certGoal > 0 && !isNaN(certCurr)) {
-    const pct = Math.min(Math.round((certCurr / certGoal) * 100), 100);
+  const certGoalN = countCerts(document.getElementById('certGoal').value);
+  const certCurrN = countCerts(document.getElementById('certCurrent').value);
+
+  document.getElementById('certGoalCount').textContent = `${certGoalN}개`;
+  document.getElementById('certCurrCount').textContent = `${certCurrN}개`;
+
+  if (certGoalN > 0) {
+    const pct = Math.min(Math.round((certCurrN / certGoalN) * 100), 100);
     document.getElementById('certFill').style.width = `${pct}%`;
     document.getElementById('certPct').textContent  = `${pct}%`;
     document.getElementById('certFill').style.background = pct >= 100 ? '#3a8a5e' : '#2c6fad';
