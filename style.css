@@ -38,6 +38,60 @@ body {
   font-weight: 400;
 }
 
+/* ===== Tab Bar ===== */
+.tab-bar-wrapper {
+  border-bottom: 1px solid #e9e9e7;
+  background: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tab-bar-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.tabs {
+  display: flex;
+  align-items: flex-end;
+}
+
+.tab {
+  padding: 13px 0;
+  margin-right: 32px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #9b9b9b;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s;
+}
+.tab:hover { color: #1a1a1a; }
+.tab.active {
+  color: #1a1a1a;
+  font-weight: 600;
+  border-bottom-color: #1a1a1a;
+}
+
+/* ===== Tab Panels ===== */
+.tab-panel {
+  padding-top: 28px;
+  min-height: 280px;
+}
+.tab-panel.hidden { display: none; }
+.tab-panel-head { margin-bottom: 18px; }
+
+@media (max-width: 640px) {
+  .tab-bar-inner { padding: 0 24px; }
+  .tab { margin-right: 22px; font-size: 13px; }
+}
+
 /* ===== Container ===== */
 .container {
   max-width: 900px;
@@ -357,6 +411,261 @@ body {
 }
 .add-row input:focus { border-bottom-color: #1a1a1a; }
 .add-row input::placeholder { color: #c8c8c8; }
+
+/* ===== Job Links ===== */
+.job-section {
+  margin-top: 36px;
+  padding-top: 36px;
+  border-top: 1px solid #e9e9e7;
+}
+
+.job-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .job-grid { grid-template-columns: 1fr; }
+}
+
+.job-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  border-radius: 8px;
+  background: #f7f7f5;
+  text-decoration: none;
+  color: inherit;
+  min-height: 84px;
+  transition: background 0.15s;
+}
+.job-card:hover { background: #efeeeb; }
+
+.job-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.job-desc {
+  font-size: 12px;
+  color: #9b9b9b;
+  margin-top: 3px;
+}
+
+.job-link-label {
+  font-size: 12px;
+  color: #9b9b9b;
+  text-align: right;
+  margin-top: 14px;
+  transition: color 0.15s;
+}
+.job-card:hover .job-link-label { color: #1a1a1a; }
+
+/* ===== Certifications ===== */
+.cert-section {
+  margin-top: 36px;
+  padding-top: 36px;
+  border-top: 1px solid #e9e9e7;
+}
+
+#certList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cert-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background 0.12s;
+}
+.cert-item:hover { background: #f7f7f5; }
+
+.cert-info {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.cert-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.cert-badge.required { background: #ebf4ff; color: #2c6fad; }
+.cert-badge.optional { background: #f7f7f5; color: #9b9b9b; }
+
+.cert-name {
+  font-size: 14px;
+  color: #3a3a3a;
+}
+
+.cert-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.cert-registered {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3a8a5e;
+}
+
+.cert-link {
+  font-size: 12px;
+  color: #9b9b9b;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+.cert-link:hover { color: #1a1a1a; }
+
+.cert-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.cert-status.studying { background: #fff7ed; color: #c77b39; }
+.cert-status.acquired { background: #edf7ed; color: #3a8a5e; }
+
+@media (max-width: 480px) {
+  .cert-item { flex-direction: column; align-items: flex-start; gap: 6px; }
+}
+
+/* ===== Spec Tracker (2-column layout) ===== */
+.spec-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.spec-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.spec-col-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e9e9e7;
+}
+
+.spec-col-items {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.spec-row-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 8px;
+  border-radius: 6px;
+  transition: background 0.12s;
+}
+.spec-row-item:hover { background: #f7f7f5; }
+
+.spec-row-label {
+  font-size: 14px;
+  color: #3a3a3a;
+  font-weight: 500;
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.spec-row-item > input {
+  flex: 1;
+  border: none;
+  border-bottom: 1px solid #e9e9e7;
+  padding: 4px 0;
+  font-size: 14px;
+  color: #1a1a1a;
+  font-family: inherit;
+  background: transparent;
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 0;
+}
+.spec-row-item > input:focus { border-bottom-color: #1a1a1a; }
+.spec-row-item > input::placeholder { color: #c8c8c8; }
+
+.spec-row-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.spec-row-right input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid #e9e9e7;
+  padding: 4px 0;
+  font-size: 14px;
+  color: #1a1a1a;
+  font-family: inherit;
+  background: transparent;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.spec-row-right input:focus { border-bottom-color: #1a1a1a; }
+.spec-row-right input::placeholder { color: #c8c8c8; }
+
+.spec-progress-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-track {
+  flex: 1;
+  height: 4px;
+  background: #e9e9e7;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #2c6fad;
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+.progress-pct {
+  font-size: 12px;
+  color: #9b9b9b;
+  font-weight: 500;
+  min-width: 30px;
+  text-align: right;
+}
+
+.spec-save-btn {
+  align-self: flex-end;
+  margin-top: 20px;
+}
+
+@media (max-width: 640px) {
+  .spec-cols { grid-template-columns: 1fr; gap: 28px; }
+}
 
 /* ===== Memo ===== */
 .memo-card {

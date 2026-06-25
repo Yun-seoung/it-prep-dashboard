@@ -31,6 +31,28 @@ const DEFAULT_CHECKLIST = [
   { text: 'NCS 정리',     done: false },
 ];
 
+// ===== Certifications =====
+const CERTS = [
+  {
+    category: '필수',
+    items: [
+      { name: '정보처리기사',              keyword: '정보처리기사', url: 'https://www.q-net.or.kr' },
+      { name: 'SQLD (SQL 개발자)',         keyword: 'sqld',         url: 'https://www.dataq.or.kr' },
+      { name: '컴퓨터활용능력 1급',        keyword: '컴퓨터활용',   url: 'https://license.korcham.net' },
+    ],
+  },
+  {
+    category: '우대',
+    items: [
+      { name: '정보보안기사',              keyword: '정보보안기사', url: 'https://www.q-net.or.kr' },
+      { name: '리눅스마스터 1급',          keyword: '리눅스마스터', url: 'https://www.lpi.or.kr' },
+      { name: '네트워크관리사',            keyword: '네트워크관리', url: 'https://www.icqa.or.kr' },
+      { name: 'ADsP (데이터분석 준전문가)', keyword: 'adsp',         url: 'https://www.dataq.or.kr' },
+      { name: 'OPIc IH 이상',             keyword: 'opic',          url: 'https://www.opic.or.kr' },
+    ],
+  },
+];
+
 // ===== URL Auto-Match =====
 const URL_MAP = [
   { keywords: ['토익', 'toeic', '토스'],  url: 'https://exam.yb.co.kr' },
@@ -133,6 +155,16 @@ async function dbSaveMemo(text) {
   await setDoc(doc(db, 'memo', 'today'), { text });
 }
 
+// ===== Firestore: Spec =====
+async function dbLoadSpec() {
+  const snap = await getDoc(doc(db, 'spec', 'tracker'));
+  return snap.exists() ? snap.data() : {};
+}
+
+async function dbSaveSpec(data) {
+  await setDoc(doc(db, 'spec', 'tracker'), data, { merge: true });
+}
+
 // ===== Default Data Seed (only when collections are empty) =====
 async function seedDefaultData() {
   const [examSnap, checkSnap] = await Promise.all([
@@ -175,6 +207,7 @@ function renderDdays() {
 
   if (ddays.length === 0) {
     el.innerHTML = '<p class="dday-empty">등록된 일정이 없습니다.</p>';
+    renderCerts();
     return;
   }
 
@@ -207,7 +240,125 @@ function renderDdays() {
       renderDdays();
     });
   });
+
+  renderCerts();
 }
+
+// ===== Render: Certifications =====
+function renderCerts() {
+  const el = document.getElementById('certList');
+  if (!el) return;
+
+  el.innerHTML = CERTS.flatMap(group => {
+    const isMandatory = group.category === '필수';
+    const badgeClass  = isMandatory ? 'required' : 'optional';
+
+    return group.items.map(cert => {
+      const acquired = checklist.some(c =>
+        c.done && c.text.toLowerCase().includes(cert.keyword)
+      );
+      const studying = !acquired && ddays.some(d =>
+        d.label.toLowerCase().includes(cert.keyword)
+      );
+
+      const statusBadge = acquired
+        ? '<span class="cert-status acquired">취득</span>'
+        : studying
+          ? '<span class="cert-status studying">준비중</span>'
+          : '';
+
+      return `
+        <div class="cert-item">
+          <div class="cert-info">
+            <span class="cert-badge ${badgeClass}">${group.category}</span>
+            <span class="cert-name">${escHtml(cert.name)}</span>
+            ${statusBadge}
+          </div>
+          <div class="cert-actions">
+            <a class="cert-link" href="${cert.url}" target="_blank" rel="noopener noreferrer">↗ 접수 바로가기</a>
+          </div>
+        </div>
+      `;
+    });
+  }).join('');
+}
+
+// ===== Spec Tracker =====
+function updateSpecProgress() {
+  const gpaGoal = parseFloat(document.getElementById('gpaGoal').value);
+  const gpaCurr = parseFloat(document.getElementById('gpaCurrent').value);
+  if (gpaGoal > 0 && !isNaN(gpaCurr)) {
+    const pct = Math.min(Math.round((gpaCurr / gpaGoal) * 100), 100);
+    document.getElementById('gpaFill').style.width = `${pct}%`;
+    document.getElementById('gpaPct').textContent  = `${pct}%`;
+    document.getElementById('gpaFill').style.background = pct >= 100 ? '#3a8a5e' : '#2c6fad';
+  } else {
+    document.getElementById('gpaFill').style.width = '0%';
+    document.getElementById('gpaPct').textContent  = '—';
+  }
+
+  const certGoal = parseInt(document.getElementById('certGoal').value);
+  const certCurr = parseInt(document.getElementById('certCurrent').value);
+  if (certGoal > 0 && !isNaN(certCurr)) {
+    const pct = Math.min(Math.round((certCurr / certGoal) * 100), 100);
+    document.getElementById('certFill').style.width = `${pct}%`;
+    document.getElementById('certPct').textContent  = `${pct}%`;
+    document.getElementById('certFill').style.background = pct >= 100 ? '#3a8a5e' : '#2c6fad';
+  } else {
+    document.getElementById('certFill').style.width = '0%';
+    document.getElementById('certPct').textContent  = '—';
+  }
+}
+
+async function loadSpec() {
+  const data = await dbLoadSpec();
+  document.getElementById('gpaGoal').value        = data.gpaGoal        ?? '';
+  document.getElementById('gpaCurrent').value     = data.gpaCurrent     ?? '';
+  document.getElementById('englishGoal').value    = data.englishGoal    ?? '';
+  document.getElementById('englishCurrent').value = data.englishCurrent ?? '';
+  document.getElementById('certGoal').value       = data.certGoal       ?? '';
+  document.getElementById('certCurrent').value    = data.certCurrent    ?? '';
+  document.getElementById('internGoal').value     = data.internGoal     ?? '';
+  document.getElementById('internCurrent').value  = data.internCurrent  ?? '';
+  document.getElementById('extraGoal').value      = data.extraGoal      ?? '';
+  document.getElementById('extraCurrent').value   = data.extraCurrent   ?? '';
+  updateSpecProgress();
+}
+
+document.getElementById('saveGoal').addEventListener('click', async () => {
+  const btn = document.getElementById('saveGoal');
+  btn.textContent = '저장 중...';
+  btn.disabled = true;
+  await dbSaveSpec({
+    gpaGoal:     document.getElementById('gpaGoal').value,
+    englishGoal: document.getElementById('englishGoal').value,
+    certGoal:    document.getElementById('certGoal').value,
+    internGoal:  document.getElementById('internGoal').value,
+    extraGoal:   document.getElementById('extraGoal').value,
+  });
+  btn.textContent = '저장됨 ✓';
+  setTimeout(() => { btn.textContent = '목표 저장'; btn.disabled = false; }, 1600);
+});
+
+document.getElementById('saveCurrent').addEventListener('click', async () => {
+  const btn = document.getElementById('saveCurrent');
+  btn.textContent = '저장 중...';
+  btn.disabled = true;
+  await dbSaveSpec({
+    gpaCurrent:     document.getElementById('gpaCurrent').value,
+    englishCurrent: document.getElementById('englishCurrent').value,
+    certCurrent:    document.getElementById('certCurrent').value,
+    internCurrent:  document.getElementById('internCurrent').value,
+    extraCurrent:   document.getElementById('extraCurrent').value,
+  });
+  updateSpecProgress();
+  btn.textContent = '저장됨 ✓';
+  setTimeout(() => { btn.textContent = '현재 저장'; btn.disabled = false; }, 1600);
+});
+
+['gpaGoal', 'gpaCurrent', 'certGoal', 'certCurrent'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateSpecProgress);
+});
 
 // ===== D-Day Form =====
 const ddayForm   = document.getElementById('ddayForm');
@@ -280,6 +431,8 @@ function renderChecklist() {
       renderChecklist();
     });
   });
+
+  renderCerts();
 }
 
 // ===== Checklist Add =====
@@ -297,6 +450,16 @@ async function addCheckItem() {
 document.getElementById('addCheckBtn').addEventListener('click', addCheckItem);
 document.getElementById('newCheckText').addEventListener('keydown', e => {
   if (e.key === 'Enter') addCheckItem();
+});
+
+// ===== Tab Switching =====
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+    tab.classList.add('active');
+    document.getElementById(`tab-${tab.dataset.tab}`).classList.remove('hidden');
+  });
 });
 
 // ===== Memo =====
@@ -329,6 +492,7 @@ async function init() {
 
     renderDdays();
     renderChecklist();
+    await loadSpec();
   } catch (err) {
     console.error('[Firebase 오류]', err);
   }
