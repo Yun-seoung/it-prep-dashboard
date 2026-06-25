@@ -695,24 +695,8 @@ body {
 
 .char-avatar {
   width: 120px;
-  height: 120px;
-  border-radius: 14px;
-  overflow: hidden;
-  background-image: url('img/characters.png');
-  background-repeat: no-repeat;
-  background-color: #62b9d0;
-  background-size: auto 220px;
-  flex-shrink: 0;
-}
-
-/* 돋보기 여자 — 이미지 왼쪽 캐릭터 ("나") */
-.char-avatar.type-current {
-  background-position: 2px -28px;
-}
-
-/* 안경 남자 — 이미지 오른쪽 캐릭터 ("목표 합격자") */
-.char-avatar.type-goal {
-  background-position: -162px -28px;
+  height: auto;
+  display: block;
 }
 
 .char-label {
