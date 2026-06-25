@@ -2,7 +2,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getFirestore, collection, doc,
-  getDocs, addDoc, deleteDoc, updateDoc, setDoc, getDoc
+  getDocs, addDoc, deleteDoc, updateDoc, setDoc, getDoc,
+  query, where
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 // ===== Firebase Init =====
@@ -74,7 +75,29 @@ let ddays      = [];
 let checklist  = [];
 let certStatus = {}; // { [certName]: { acquired: boolean, date: string|null } }
 
+// Timer state
+let timerInterval     = null;
+let timerTotalSeconds = 0;
+let timerDate         = '';
+
+// Calendar state
+let calendarYear   = new Date().getFullYear();
+let calendarMonth  = new Date().getMonth(); // 0-indexed
+let monthStudyData = {};                    // { 'YYYY-MM-DD': totalSeconds }
+let selectedDate   = null;
+
 // ===== Pure Helpers =====
+function getDateString(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function formatTimer(secs) {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
 function escHtml(str) {
   const d = document.createElement('div');
   d.appendChild(document.createTextNode(str));
@@ -146,14 +169,35 @@ async function dbDeleteCheckItem(id) {
   await deleteDoc(doc(db, 'checklist', id));
 }
 
-// ===== Firestore: Memo =====
-async function dbLoadMemo() {
-  const snap = await getDoc(doc(db, 'memo', 'today'));
-  return snap.exists() ? (snap.data().text ?? '') : '';
+// ===== Firestore: Diary =====
+async function dbLoadDiary(date) {
+  const snap = await getDoc(doc(db, 'diary', date));
+  return snap.exists() ? (snap.data().content ?? '') : '';
 }
 
-async function dbSaveMemo(text) {
-  await setDoc(doc(db, 'memo', 'today'), { text });
+async function dbSaveDiary(date, content) {
+  await setDoc(doc(db, 'diary', date), { date, content, updatedAt: Date.now() });
+}
+
+// ===== Firestore: Study Time =====
+async function dbLoadStudyTime(date) {
+  const snap = await getDoc(doc(db, 'studyTime', date));
+  return snap.exists() ? (snap.data().totalSeconds ?? 0) : 0;
+}
+
+async function dbSaveStudyTime(date, totalSeconds) {
+  await setDoc(doc(db, 'studyTime', date), { date, totalSeconds });
+}
+
+async function dbLoadMonthStudyData(year, month) {
+  const firstStr = `${year}-${String(month+1).padStart(2,'0')}-01`;
+  const lastDay  = new Date(year, month + 1, 0).getDate();
+  const lastStr  = `${year}-${String(month+1).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
+  const q    = query(collection(db, 'studyTime'), where('date', '>=', firstStr), where('date', '<=', lastStr));
+  const snap = await getDocs(q);
+  const result = {};
+  snap.docs.forEach(d => { result[d.data().date] = d.data().totalSeconds; });
+  return result;
 }
 
 // ===== Firestore: Spec =====
@@ -415,6 +459,135 @@ async function loadSpec() {
   updateSpecProgress();
 }
 
+// ===== Study Timer =====
+function startTimer() {
+  if (timerInterval) return;
+  document.getElementById('timerStartBtn').classList.add('hidden');
+  document.getElementById('timerStopBtn').classList.remove('hidden');
+
+  timerInterval = setInterval(() => {
+    const now = getDateString();
+    if (now !== timerDate) {
+      dbSaveStudyTime(timerDate, timerTotalSeconds);
+      timerDate = now;
+      timerTotalSeconds = 0;
+    }
+    timerTotalSeconds++;
+    document.getElementById('timerDisplay').textContent = formatTimer(timerTotalSeconds);
+  }, 1000);
+}
+
+async function stopTimer() {
+  if (!timerInterval) return;
+  clearInterval(timerInterval);
+  timerInterval = null;
+  document.getElementById('timerStartBtn').classList.remove('hidden');
+  document.getElementById('timerStopBtn').classList.add('hidden');
+  await dbSaveStudyTime(timerDate, timerTotalSeconds);
+}
+
+document.getElementById('timerStartBtn').addEventListener('click', startTimer);
+document.getElementById('timerStopBtn').addEventListener('click', stopTimer);
+
+window.addEventListener('beforeunload', () => {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    dbSaveStudyTime(timerDate, timerTotalSeconds);
+  }
+});
+
+// ===== Calendar (기록 탭) =====
+async function renderCalendar() {
+  const year  = calendarYear;
+  const month = calendarMonth;
+  document.getElementById('calendarTitle').textContent = `${year}년 ${month + 1}월`;
+  monthStudyData = await dbLoadMonthStudyData(year, month);
+
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
+
+  ['일', '월', '화', '수', '목', '금', '토'].forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-dow';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  const firstDow = new Date(year, month, 1).getDay();
+  for (let i = 0; i < firstDow; i++) {
+    const el = document.createElement('div');
+    el.className = 'cal-cell empty';
+    grid.appendChild(el);
+  }
+
+  const todayStr = getDateString();
+  const lastDate = new Date(year, month + 1, 0).getDate();
+
+  for (let d = 1; d <= lastDate; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const secs    = monthStudyData[dateStr] ?? 0;
+    const hrs     = secs / 3600;
+
+    let colorClass = '';
+    if (secs > 0) {
+      if (hrs < 1)      colorClass = 'study-light';
+      else if (hrs < 3) colorClass = 'study-mid';
+      else              colorClass = 'study-dark';
+    }
+
+    const el = document.createElement('div');
+    el.className = ['cal-cell', colorClass, dateStr === todayStr ? 'today' : '', dateStr === selectedDate ? 'selected' : '']
+      .filter(Boolean).join(' ');
+    el.textContent  = d;
+    el.dataset.date = dateStr;
+    el.addEventListener('click', () => showDateDetail(dateStr));
+    grid.appendChild(el);
+  }
+
+  if (selectedDate) {
+    const [sy, sm] = selectedDate.split('-').map(Number);
+    if (sy === year && sm - 1 === month) {
+      showDateDetail(selectedDate);
+    } else {
+      document.getElementById('dateDetail').classList.add('hidden');
+    }
+  }
+}
+
+async function showDateDetail(dateStr) {
+  selectedDate = dateStr;
+  document.querySelectorAll('.cal-cell').forEach(el => {
+    el.classList.toggle('selected', el.dataset.date === dateStr);
+  });
+
+  const [y, m, d] = dateStr.split('-');
+  document.getElementById('detailDate').textContent =
+    `${y}년 ${parseInt(m)}월 ${parseInt(d)}일`;
+
+  const secs = monthStudyData[dateStr] ?? 0;
+  const hrs  = Math.floor(secs / 3600);
+  const mins = Math.floor((secs % 3600) / 60);
+  document.getElementById('detailStudyTime').textContent =
+    secs > 0 ? `${hrs}시간 ${mins}분` : '기록 없음';
+
+  const diary = await dbLoadDiary(dateStr);
+  document.getElementById('detailDiaryContent').textContent = diary || '기록 없음';
+
+  document.getElementById('dateDetail').classList.remove('hidden');
+}
+
+document.getElementById('calPrevBtn').addEventListener('click', async () => {
+  calendarMonth--;
+  if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+  await renderCalendar();
+});
+
+document.getElementById('calNextBtn').addEventListener('click', async () => {
+  calendarMonth++;
+  if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+  await renderCalendar();
+});
+
 document.getElementById('saveGoal').addEventListener('click', async () => {
   const btn = document.getElementById('saveGoal');
   btn.textContent = '저장 중...';
@@ -556,48 +729,58 @@ document.getElementById('certGaugeTarget').addEventListener('input', () => {
 
 // ===== Tab Switching =====
 document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
+  tab.addEventListener('click', async () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
     tab.classList.add('active');
-    document.getElementById(`tab-${tab.dataset.tab}`).classList.remove('hidden');
+    const target = tab.dataset.tab;
+    document.getElementById(`tab-${target}`).classList.remove('hidden');
+    if (target === 'record') await renderCalendar();
   });
 });
 
-// ===== Memo =====
-const memoArea      = document.getElementById('memoArea');
-const autoSaveLabel = document.getElementById('autoSaveLabel');
+// ===== Diary =====
+const diaryArea     = document.getElementById('diaryArea');
+const diaryAutoSave = document.getElementById('diaryAutoSave');
 
-let memoTimer = null;
-memoArea.addEventListener('input', () => {
-  clearTimeout(memoTimer);
-  autoSaveLabel.textContent = '저장 중...';
-  memoTimer = setTimeout(async () => {
-    await dbSaveMemo(memoArea.value);
-    autoSaveLabel.textContent = '저장됨 ✓';
-    setTimeout(() => { autoSaveLabel.textContent = ''; }, 1800);
-  }, 600);
+let diaryTimer = null;
+diaryArea.addEventListener('input', () => {
+  clearTimeout(diaryTimer);
+  diaryAutoSave.textContent = '저장 중...';
+  diaryTimer = setTimeout(async () => {
+    await dbSaveDiary(getDateString(), diaryArea.value);
+    diaryAutoSave.textContent = '저장됨 ✓';
+    setTimeout(() => { diaryAutoSave.textContent = ''; }, 1800);
+  }, 5000);
 });
 
 // ===== Init =====
 async function init() {
   renderToday();
+  const today = getDateString();
+  timerDate = today;
+
   try {
     await seedDefaultData();
 
-    const [ddaysData, checklistData, memoText, gaugeTarget, certStatusData] = await Promise.all([
-      dbLoadDdays(),
-      dbLoadChecklist(),
-      dbLoadMemo(),
-      dbLoadGaugeTarget(),
-      dbLoadCertStatus(),
-    ]);
+    const [ddaysData, checklistData, diaryContent, gaugeTarget, certStatusData, todaySeconds] =
+      await Promise.all([
+        dbLoadDdays(),
+        dbLoadChecklist(),
+        dbLoadDiary(today),
+        dbLoadGaugeTarget(),
+        dbLoadCertStatus(),
+        dbLoadStudyTime(today),
+      ]);
 
     ddays      = ddaysData;
     checklist  = checklistData;
     certStatus = certStatusData;
-    memoArea.value = memoText;
+    diaryArea.value = diaryContent;
     document.getElementById('certGaugeTarget').value = gaugeTarget;
+
+    timerTotalSeconds = todaySeconds;
+    document.getElementById('timerDisplay').textContent = formatTimer(timerTotalSeconds);
 
     ddays.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
     checklist.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));

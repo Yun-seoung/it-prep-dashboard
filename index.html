@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>공기업 IT 직무 준비 대시보드</title>
   <link rel="stylesheet" href="style.css">
-</head>
+</head>clear
 <body>
 
   <header class="site-header">
@@ -20,6 +20,7 @@
         <button class="tab" data-tab="cert">자격증</button>
         <button class="tab" data-tab="jobs">채용공고</button>
         <button class="tab" data-tab="spec">스펙 트래커</button>
+        <button class="tab" data-tab="record">기록</button>
       </nav>
     </div>
   </div>
@@ -28,6 +29,18 @@
 
     <!-- ===== 홈 탭 ===== -->
     <div id="tab-home" class="tab-panel">
+
+      <!-- 공부 타이머 -->
+      <div class="timer-card">
+        <div class="section-head">
+          <h2>오늘 공부 시간</h2>
+        </div>
+        <p id="timerDisplay" class="timer-display">00:00:00</p>
+        <div class="timer-btns">
+          <button id="timerStartBtn" class="btn-timer btn-timer-start">▶ START</button>
+          <button id="timerStopBtn" class="btn-timer btn-timer-stop hidden">■ STOP</button>
+        </div>
+      </div>
 
       <div class="gauge-section">
         <div class="gauge-card">
@@ -92,10 +105,10 @@
 
       <section class="memo-card">
         <div class="section-head">
-          <h2>오늘 할 일</h2>
-          <span id="autoSaveLabel" class="auto-save-label"></span>
+          <h2>오늘의 기록</h2>
+          <span id="diaryAutoSave" class="auto-save-label"></span>
         </div>
-        <textarea id="memoArea" placeholder="오늘 공부할 내용, 할 일 등을 자유롭게 적어보세요..."></textarea>
+        <textarea id="diaryArea" placeholder="오늘 공부한 내용, 느낀 점 등을 자유롭게 적어보세요..."></textarea>
       </section>
 
     </div>
@@ -251,6 +264,37 @@
         <button id="saveCurrent" class="btn-primary spec-save-btn">현재 저장</button>
 
       </div>
+    </div>
+
+    <!-- ===== 기록 탭 ===== -->
+    <div id="tab-record" class="tab-panel hidden">
+
+      <div class="cal-nav">
+        <button id="calPrevBtn" class="cal-nav-btn">&#8249;</button>
+        <span id="calendarTitle" class="cal-nav-title"></span>
+        <button id="calNextBtn" class="cal-nav-btn">&#8250;</button>
+      </div>
+
+      <div class="cal-legend">
+        <span class="cal-legend-item"><span class="cal-legend-dot study-light"></span>1시간 미만</span>
+        <span class="cal-legend-item"><span class="cal-legend-dot study-mid"></span>1~3시간</span>
+        <span class="cal-legend-item"><span class="cal-legend-dot study-dark"></span>3시간 이상</span>
+      </div>
+
+      <div id="calendarGrid" class="cal-grid"></div>
+
+      <div id="dateDetail" class="date-detail hidden">
+        <p id="detailDate" class="detail-date-title"></p>
+        <div class="detail-study-row">
+          <span class="detail-label">공부시간</span>
+          <span id="detailStudyTime" class="detail-value">—</span>
+        </div>
+        <div class="detail-diary-section">
+          <p class="detail-label">일기</p>
+          <p id="detailDiaryContent" class="detail-diary-text"></p>
+        </div>
+      </div>
+
     </div>
 
   </div>
