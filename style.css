@@ -629,6 +629,37 @@ body {
   color: #3a8a5e;
 }
 
+.cert-acquire-btn {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 11px;
+  border-radius: 5px;
+  border: 1.5px solid #d0d0d0;
+  background: transparent;
+  color: #9b9b9b;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.cert-acquire-btn:hover {
+  border-color: #3a8a5e;
+  color: #3a8a5e;
+}
+.cert-acquire-btn.acquired {
+  border-color: #3a8a5e;
+  background: #edf7ed;
+  color: #3a8a5e;
+  font-weight: 600;
+}
+.cert-acquire-btn.acquired:hover {
+  background: #d5edd5;
+}
+.cert-acquire-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .cert-link {
   font-size: 12px;
   color: #9b9b9b;

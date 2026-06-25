@@ -70,8 +70,9 @@ function guessUrl(label) {
 }
 
 // ===== State =====
-let ddays     = [];
-let checklist = [];
+let ddays      = [];
+let checklist  = [];
+let certStatus = {}; // { [certName]: { acquired: boolean, date: string|null } }
 
 // ===== Pure Helpers =====
 function escHtml(str) {
@@ -163,6 +164,21 @@ async function dbLoadSpec() {
 
 async function dbSaveSpec(data) {
   await setDoc(doc(db, 'spec', 'tracker'), data, { merge: true });
+}
+
+// ===== Firestore: Cert Status =====
+async function dbLoadCertStatus() {
+  const snap = await getDocs(collection(db, 'certStatus'));
+  const result = {};
+  snap.docs.forEach(d => { result[d.id] = d.data(); });
+  return result;
+}
+
+async function dbToggleCertStatus(certName, acquired) {
+  await setDoc(doc(db, 'certStatus', certName), {
+    acquired,
+    date: acquired ? new Date().toISOString().split('T')[0] : null,
+  });
 }
 
 // ===== Firestore: Gauge =====
@@ -264,9 +280,7 @@ function renderCerts() {
     const badgeClass  = isMandatory ? 'required' : 'optional';
 
     return group.items.map(cert => {
-      const acquired = checklist.some(c =>
-        c.done && c.text.toLowerCase().includes(cert.keyword)
-      );
+      const acquired = certStatus[cert.name]?.acquired === true;
       const studying = !acquired && ddays.some(d =>
         d.label.toLowerCase().includes(cert.keyword)
       );
@@ -277,6 +291,10 @@ function renderCerts() {
           ? '<span class="cert-status studying">준비중</span>'
           : '';
 
+      const toggleBtn = acquired
+        ? `<button class="cert-acquire-btn acquired" data-name="${escHtml(cert.name)}">✓ 취득</button>`
+        : `<button class="cert-acquire-btn" data-name="${escHtml(cert.name)}">취득하기</button>`;
+
       return `
         <div class="cert-item">
           <div class="cert-info">
@@ -285,18 +303,34 @@ function renderCerts() {
             ${statusBadge}
           </div>
           <div class="cert-actions">
+            ${toggleBtn}
             <a class="cert-link" href="${cert.url}" target="_blank" rel="noopener noreferrer">↗ 접수 바로가기</a>
           </div>
         </div>
       `;
     });
   }).join('');
+
+  el.querySelectorAll('.cert-acquire-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const name     = btn.dataset.name;
+      const newState = !(certStatus[name]?.acquired === true);
+      certStatus[name] = {
+        acquired: newState,
+        date: newState ? new Date().toISOString().split('T')[0] : null,
+      };
+      btn.disabled = true;
+      await dbToggleCertStatus(name, newState);
+      renderCerts();
+      renderGauges();
+    });
+  });
 }
 
 // ===== Pixel Gauges =====
 function getAcquiredCertCount() {
   return CERTS.flatMap(g => g.items).filter(cert =>
-    checklist.some(c => c.done && c.text.toLowerCase().includes(cert.keyword))
+    certStatus[cert.name]?.acquired === true
   ).length;
 }
 
@@ -542,15 +576,17 @@ async function init() {
   try {
     await seedDefaultData();
 
-    const [ddaysData, checklistData, memoText, gaugeTarget] = await Promise.all([
+    const [ddaysData, checklistData, memoText, gaugeTarget, certStatusData] = await Promise.all([
       dbLoadDdays(),
       dbLoadChecklist(),
       dbLoadMemo(),
       dbLoadGaugeTarget(),
+      dbLoadCertStatus(),
     ]);
 
-    ddays     = ddaysData;
-    checklist = checklistData;
+    ddays      = ddaysData;
+    checklist  = checklistData;
+    certStatus = certStatusData;
     memoArea.value = memoText;
     document.getElementById('certGaugeTarget').value = gaugeTarget;
 
