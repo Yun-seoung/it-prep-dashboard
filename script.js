@@ -1,21 +1,42 @@
-// ===== Storage Keys =====
-const KEY = {
-  DDAYS: 'it-prep-ddays',
-  CHECKLIST: 'it-prep-checklist',
-  MEMO: 'it-prep-memo',
-};
+// ===== Firebase Imports (CDN ESM) =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {
+  getFirestore, collection, doc,
+  getDocs, addDoc, deleteDoc, updateDoc, setDoc, getDoc
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-// Default data (dates calculated so OPIc = D-45, SQLD = D-12 from 2026-06-25)
+// ===== Firebase Init =====
+const app = initializeApp({
+  apiKey:            "AIzaSyCnRlZB5_EkW1DFTqjDh3xs9iMcdg3yC7c",
+  authDomain:        "it-prep-dashboard.firebaseapp.com",
+  projectId:         "it-prep-dashboard",
+  storageBucket:     "it-prep-dashboard.firebasestorage.app",
+  messagingSenderId: "665070534927",
+  appId:             "1:665070534927:web:25cffa9a6f71979ba13e7a",
+  measurementId:     "G-3EMXE1V6FR",
+});
+const db = getFirestore(app);
+
+// ===== Default Data =====
 const DEFAULT_DDAYS = [
-  { id: 1, label: 'OPIc',  date: '2026-08-09', url: 'https://www.opic.or.kr' },
-  { id: 2, label: 'SQLD',  date: '2026-07-07', url: 'https://www.dataq.or.kr' },
+  { label: 'OPIc',        date: '2026-08-09', url: 'https://www.opic.or.kr' },
+  { label: 'SQLD',        date: '2026-07-07', url: 'https://www.dataq.or.kr' },
+  { label: '정보처리기사', date: '2026-11-14', url: 'https://www.q-net.or.kr' },
 ];
 
+const DEFAULT_CHECKLIST = [
+  { text: 'ADsP 취득',    done: false },
+  { text: 'SQLD 취득',    done: false },
+  { text: 'OPIc IH 이상', done: false },
+  { text: 'NCS 정리',     done: false },
+];
+
+// ===== URL Auto-Match =====
 const URL_MAP = [
-  { keywords: ['토익', 'toeic', '토스'],    url: 'https://exam.yb.co.kr' },
-  { keywords: ['opic'],                     url: 'https://www.opic.or.kr' },
-  { keywords: ['sqld', 'sqlp', 'adsp'],    url: 'https://www.dataq.or.kr' },
-  { keywords: ['정보처리'],                  url: 'https://www.q-net.or.kr' },
+  { keywords: ['토익', 'toeic', '토스'],  url: 'https://exam.yb.co.kr' },
+  { keywords: ['opic'],                   url: 'https://www.opic.or.kr' },
+  { keywords: ['sqld', 'sqlp', 'adsp'],  url: 'https://www.dataq.or.kr' },
+  { keywords: ['정보처리'],               url: 'https://www.q-net.or.kr' },
 ];
 
 function guessUrl(label) {
@@ -26,27 +47,11 @@ function guessUrl(label) {
   return null;
 }
 
-const DEFAULT_CHECKLIST = [
-  { id: 1, text: 'ADsP 취득',     done: false },
-  { id: 2, text: 'SQLD 취득',     done: false },
-  { id: 3, text: 'OPIc IH 이상',  done: false },
-  { id: 4, text: 'NCS 정리',      done: false },
-];
+// ===== State =====
+let ddays     = [];
+let checklist = [];
 
-// ===== Utilities =====
-function storageLoad(key, fallback) {
-  try {
-    const v = localStorage.getItem(key);
-    return v ? JSON.parse(v) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function storageSave(key, val) {
-  localStorage.setItem(key, JSON.stringify(val));
-}
-
+// ===== Pure Helpers =====
 function escHtml(str) {
   const d = document.createElement('div');
   d.appendChild(document.createTextNode(str));
@@ -62,7 +67,7 @@ function calcDday(dateStr) {
 }
 
 function ddayLabel(d) {
-  if (d < 0)  return `D+${Math.abs(d)}`;
+  if (d < 0)   return `D+${Math.abs(d)}`;
   if (d === 0) return 'D-Day';
   return `D-${d}`;
 }
@@ -75,23 +80,96 @@ function ddayClass(d) {
 }
 
 function formatDate(dateStr) {
-  const [y, m, d] = dateStr.split('-');
-  return `${y}.${m}.${d}`;
+  const [y, m, day] = dateStr.split('-');
+  return `${y}.${m}.${day}`;
 }
 
-// ===== State =====
-let ddays     = storageLoad(KEY.DDAYS,     DEFAULT_DDAYS);
-let checklist = storageLoad(KEY.CHECKLIST, DEFAULT_CHECKLIST);
+// ===== Firestore: D-Day (exams) =====
+async function dbLoadDdays() {
+  const snap = await getDocs(collection(db, 'exams'));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
 
-// ===== Today Header =====
+async function dbAddDday(label, date) {
+  const url = guessUrl(label);
+  const ref = await addDoc(collection(db, 'exams'), {
+    label, date, url: url ?? null, createdAt: Date.now(),
+  });
+  return { id: ref.id, label, date, url };
+}
+
+async function dbDeleteDday(id) {
+  await deleteDoc(doc(db, 'exams', id));
+}
+
+// ===== Firestore: Checklist =====
+async function dbLoadChecklist() {
+  const snap = await getDocs(collection(db, 'checklist'));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+async function dbAddCheckItem(text) {
+  const ref = await addDoc(collection(db, 'checklist'), {
+    text, done: false, createdAt: Date.now(),
+  });
+  return { id: ref.id, text, done: false };
+}
+
+async function dbToggleCheckItem(id, done) {
+  await updateDoc(doc(db, 'checklist', id), { done });
+}
+
+async function dbDeleteCheckItem(id) {
+  await deleteDoc(doc(db, 'checklist', id));
+}
+
+// ===== Firestore: Memo =====
+async function dbLoadMemo() {
+  const snap = await getDoc(doc(db, 'memo', 'today'));
+  return snap.exists() ? (snap.data().text ?? '') : '';
+}
+
+async function dbSaveMemo(text) {
+  await setDoc(doc(db, 'memo', 'today'), { text });
+}
+
+// ===== Default Data Seed (only when collections are empty) =====
+async function seedDefaultData() {
+  const [examSnap, checkSnap] = await Promise.all([
+    getDocs(collection(db, 'exams')),
+    getDocs(collection(db, 'checklist')),
+  ]);
+
+  const writes = [];
+
+  if (examSnap.empty) {
+    DEFAULT_DDAYS.forEach((item, i) => {
+      writes.push(
+        addDoc(collection(db, 'exams'), { ...item, createdAt: Date.now() + i })
+      );
+    });
+  }
+
+  if (checkSnap.empty) {
+    DEFAULT_CHECKLIST.forEach((item, i) => {
+      writes.push(
+        addDoc(collection(db, 'checklist'), { ...item, createdAt: Date.now() + 100 + i })
+      );
+    });
+  }
+
+  if (writes.length) await Promise.all(writes);
+}
+
+// ===== Render: Today =====
 function renderToday() {
   const d = new Date();
-  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+  const days = ['일', '월', '화', '수', '목', '금', '토'];
   document.getElementById('todayDate').textContent =
-    `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${dayNames[d.getDay()]})`;
+    `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
 }
 
-// ===== D-Day =====
+// ===== Render: D-Day =====
 function renderDdays() {
   const el = document.getElementById('ddayList');
 
@@ -122,14 +200,16 @@ function renderDdays() {
   }).join('');
 
   el.querySelectorAll('.dday-del').forEach(btn => {
-    btn.addEventListener('click', () => {
-      ddays = ddays.filter(x => x.id !== Number(btn.dataset.id));
-      storageSave(KEY.DDAYS, ddays);
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      await dbDeleteDday(id);
+      ddays = ddays.filter(x => x.id !== id);
       renderDdays();
     });
   });
 }
 
+// ===== D-Day Form =====
 const ddayForm   = document.getElementById('ddayForm');
 const ddayLabelI = document.getElementById('ddayLabel');
 const ddayDateI  = document.getElementById('ddayDate');
@@ -140,12 +220,10 @@ document.getElementById('openDdayForm').addEventListener('click', () => {
 });
 
 document.getElementById('cancelDday').addEventListener('click', closeDdayForm);
-
 document.getElementById('saveDday').addEventListener('click', saveDday);
-
 ddayDateI.addEventListener('keydown', e => { if (e.key === 'Enter') saveDday(); });
 
-function saveDday() {
+async function saveDday() {
   const label = ddayLabelI.value.trim();
   const date  = ddayDateI.value;
   if (!label || !date) {
@@ -153,8 +231,8 @@ function saveDday() {
     else ddayDateI.focus();
     return;
   }
-  ddays.push({ id: Date.now(), label, date, url: guessUrl(label) });
-  storageSave(KEY.DDAYS, ddays);
+  const newItem = await dbAddDday(label, date);
+  ddays.push(newItem);
   renderDdays();
   closeDdayForm();
 }
@@ -165,7 +243,7 @@ function closeDdayForm() {
   ddayDateI.value  = '';
 }
 
-// ===== Checklist =====
+// ===== Render: Checklist =====
 function renderChecklist() {
   const el   = document.getElementById('checklistEl');
   const done = checklist.filter(x => x.done).length;
@@ -173,12 +251,12 @@ function renderChecklist() {
   document.getElementById('checkProgress').textContent = `${done} / ${checklist.length}`;
 
   if (checklist.length === 0) {
-    el.innerHTML = '<li style="color:#a0aec0;font-size:0.85rem;padding:10px 4px;">항목이 없습니다.</li>';
+    el.innerHTML = '<li style="color:#9b9b9b;font-size:0.85rem;padding:6px 8px;">항목이 없습니다.</li>';
     return;
   }
 
   el.innerHTML = checklist.map(item => `
-    <li class="check-item ${item.done ? 'done' : ''}">
+    <li class="check-item ${item.done ? 'done' : ''}" data-id="${item.id}">
       <input type="checkbox" id="chk-${item.id}" ${item.done ? 'checked' : ''} data-id="${item.id}" />
       <label for="chk-${item.id}">${escHtml(item.text)}</label>
       <button class="check-del" data-id="${item.id}" title="삭제">×</button>
@@ -186,29 +264,31 @@ function renderChecklist() {
   `).join('');
 
   el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-    cb.addEventListener('change', () => {
-      const id = Number(cb.dataset.id);
+    cb.addEventListener('change', async () => {
+      const id = cb.dataset.id;
       checklist = checklist.map(x => x.id === id ? { ...x, done: cb.checked } : x);
-      storageSave(KEY.CHECKLIST, checklist);
       renderChecklist();
+      await dbToggleCheckItem(id, cb.checked);
     });
   });
 
   el.querySelectorAll('.check-del').forEach(btn => {
-    btn.addEventListener('click', () => {
-      checklist = checklist.filter(x => x.id !== Number(btn.dataset.id));
-      storageSave(KEY.CHECKLIST, checklist);
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      await dbDeleteCheckItem(id);
+      checklist = checklist.filter(x => x.id !== id);
       renderChecklist();
     });
   });
 }
 
-function addCheckItem() {
+// ===== Checklist Add =====
+async function addCheckItem() {
   const input = document.getElementById('newCheckText');
   const text  = input.value.trim();
   if (!text) { input.focus(); return; }
-  checklist.push({ id: Date.now(), text, done: false });
-  storageSave(KEY.CHECKLIST, checklist);
+  const newItem = await dbAddCheckItem(text);
+  checklist.push(newItem);
   renderChecklist();
   input.value = '';
   input.focus();
@@ -223,20 +303,35 @@ document.getElementById('newCheckText').addEventListener('keydown', e => {
 const memoArea      = document.getElementById('memoArea');
 const autoSaveLabel = document.getElementById('autoSaveLabel');
 
-memoArea.value = localStorage.getItem(KEY.MEMO) || '';
-
 let memoTimer = null;
 memoArea.addEventListener('input', () => {
   clearTimeout(memoTimer);
   autoSaveLabel.textContent = '저장 중...';
-  memoTimer = setTimeout(() => {
-    localStorage.setItem(KEY.MEMO, memoArea.value);
+  memoTimer = setTimeout(async () => {
+    await dbSaveMemo(memoArea.value);
     autoSaveLabel.textContent = '저장됨 ✓';
     setTimeout(() => { autoSaveLabel.textContent = ''; }, 1800);
   }, 600);
 });
 
 // ===== Init =====
-renderToday();
-renderDdays();
-renderChecklist();
+async function init() {
+  renderToday();
+  try {
+    await seedDefaultData();
+
+    [ddays, checklist] = await Promise.all([dbLoadDdays(), dbLoadChecklist()]);
+
+    ddays.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+    checklist.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+
+    memoArea.value = await dbLoadMemo();
+
+    renderDdays();
+    renderChecklist();
+  } catch (err) {
+    console.error('[Firebase 오류]', err);
+  }
+}
+
+init();
